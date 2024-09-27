@@ -10,3 +10,4 @@ find_package(OpenGL REQUIRED)
 
 add_subdirectory(src/lab1)
 add_subdirectory(src/lab2)
+add_subdirectory(src/lab3)
