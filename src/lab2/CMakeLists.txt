@@ -3,6 +3,8 @@ project(opengl_lab)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(lab2 main.cpp)
+find_package(GLUT REQUIRED)
 
-target_link_libraries(lab2 OpenGL::GL glfw)
+add_executable(lab2 main.cpp window.cpp window.h)
+
+target_link_libraries(lab2 OpenGL::GL glfw glut)
