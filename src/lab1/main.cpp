@@ -84,7 +84,7 @@ void gl_triangle_with_border(
 
 
 int main() {
-    const Window window("Lab1-2", 800, 600);
+    const Window window("Lab 1", 800, 600);
     window.loop([] {
         gl_rect_with_border(500, 400, 200, 200, 0xFFFF00ff);
         gl_rect_with_border(530, 430, 140, 140, 0xFF0000ff);
