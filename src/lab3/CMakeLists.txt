@@ -8,4 +8,4 @@ find_package(GLUT REQUIRED)
 add_executable(lab3 main.cpp window.cpp window.h
         stb_image.h)
 
-target_link_libraries(lab3 OpenGL::GL glfw glut)
+target_link_libraries(lab3 OpenGL::GL GLU glfw glut)
