@@ -5,20 +5,6 @@
 #include "stb_image.h"
 #include <iostream>
 
-void setup_lighting() {
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-
-    GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-    GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-    GLfloat light_diffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
-    GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-}
 
 GLuint load_texture(const char* filename) {
     int width, height, channels;
@@ -42,57 +28,91 @@ GLuint load_texture(const char* filename) {
     return texture;
 }
 
-void set_material_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
-    GLfloat material_color[] = { r, g, b, a };
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material_color);
-}
-
 void draw_textured_ring(
-    float x,
-    float y,
-    float r,
-    unsigned int border_width = 5,
-    GLuint texture = 0
-) {
+        float x,
+        float y,
+        float z,
+        float r,
+        float dr,
+        float depth = 10,
+        GLuint texture = 0
+    ) {
     glPushMatrix();
-    glTranslatef(x, y, 0.0f);
-    unsigned int border_radius = r - border_width;
+    glTranslatef(x, y, z);
+
+    float ring_inner_radius = r;
+    float ring_outer_radius = r + dr;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    // Draw border circle
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0.5f, 0.5f);
-    glVertex2f(0, 0);
-    set_material_color(1.0f, 1.0f, 1.0f, 1.0f);
+    for (int i = 0; i < 360; i++) {
+        float angle1 = (M_PI * i / 180.0f);
+        float angle2 = (M_PI * (i + 1) / 180.0f);
 
-    for (int i = 0; i <= 360; i++) {
-        float angle = 3.1415926f * i / 180;
-        float tx = 0.5f + 0.5f * cos(angle);
-        float ty = 0.5f + 0.5f * sin(angle);
-        glTexCoord2f(tx, ty);
-        glVertex2f(border_radius * cos(angle), border_radius * sin(angle));
-        glVertex2f(r * cos(angle), r * sin(angle));
+        // Внешняя часть кольца
+        glBegin(GL_QUADS);
+        // Нижняя грань
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(ring_outer_radius * cos(angle1), ring_outer_radius * sin(angle1), 0);
+        glTexCoord2f(1.0f, 0.0f); glVertex3f(ring_outer_radius * cos(angle2), ring_outer_radius * sin(angle2), 0);
+        // Верхняя грань
+        glTexCoord2f(1.0f, 1.0f); glVertex3f(ring_outer_radius * cos(angle2), ring_outer_radius * sin(angle2), depth);
+        glTexCoord2f(0.0f, 1.0f); glVertex3f(ring_outer_radius * cos(angle1), ring_outer_radius * sin(angle1), depth);
+        glEnd();
+
+        // Внутренняя часть кольца
+        glBegin(GL_QUADS);
+        // Нижняя грань
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(ring_inner_radius * cos(angle1), ring_inner_radius * sin(angle1), 0);
+        glTexCoord2f(1.0f, 0.0f); glVertex3f(ring_inner_radius * cos(angle2), ring_inner_radius * sin(angle2), 0);
+        // Верхняя грань
+        glTexCoord2f(1.0f, 1.0f); glVertex3f(ring_inner_radius * cos(angle2), ring_inner_radius * sin(angle2), depth);
+        glTexCoord2f(0.0f, 1.0f); glVertex3f(ring_inner_radius * cos(angle1), ring_inner_radius * sin(angle1), depth);
+        glEnd();
+
+        // Стороны между внутренним и внешним кольцом
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(ring_inner_radius * cos(angle1), ring_inner_radius * sin(angle1), 0);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(ring_inner_radius * cos(angle2), ring_inner_radius * sin(angle2), 0);
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(ring_outer_radius * cos(angle2), ring_outer_radius * sin(angle2), 0);
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(ring_outer_radius * cos(angle1), ring_outer_radius * sin(angle1), 0);
+
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(ring_inner_radius * cos(angle1), ring_inner_radius * sin(angle1), depth);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(ring_inner_radius * cos(angle2), ring_inner_radius * sin(angle2), depth);
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(ring_outer_radius * cos(angle2), ring_outer_radius * sin(angle2), depth);
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(ring_outer_radius * cos(angle1), ring_outer_radius * sin(angle1), depth);
+        glEnd();
     }
-    glEnd();
 
-    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D); // Отключите текстурирование
     glPopMatrix();
 }
 
+
 int main() {
     const Window window("Lab 3", 800, 600);
-    setup_lighting();
+    Window::setup_lighting();
+
     static GLuint texture = load_texture("src/lab3/texture.jpg");
 
-    window.loop([] {
-        draw_textured_ring(415, 400, 50, 15, texture);
-        draw_textured_ring(540, 400, 50, 15, texture);
+    window.loop([](GLFWwindow*) {
+        draw_textured_ring(-30, -10, 0, 10, 3, 4, texture);
+        draw_textured_ring(0, -10, 0, 10, 3, 4, texture);
+        draw_textured_ring(30, -10, 0, 10, 3, 4, texture);
 
-        draw_textured_ring(350, 450, 50, 15, texture);
-        draw_textured_ring(475, 450, 50, 15, texture);
-        draw_textured_ring(600, 450, 50, 15, texture);
+        draw_textured_ring(-15, -20, 0, 10, 3, 4, texture);
+        draw_textured_ring(15, -20, 0, 10, 3, 4, texture);
     });
 
     return 0;
