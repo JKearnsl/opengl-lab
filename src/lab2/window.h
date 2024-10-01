@@ -12,7 +12,9 @@ public:
     Window(const char* title, int width, int height);
     ~Window();
 
-    void loop(void (*renderFunc)()) const;
+    void loop(void (*renderFunc)(GLFWwindow* window)) const;
+
+    static void setup_lighting();
 
 private:
     GLFWwindow* window;
