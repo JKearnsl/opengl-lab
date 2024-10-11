@@ -1,5 +1,4 @@
 #include <cmath>
-#include <GL/gl.h>
 #include "window.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -95,7 +94,60 @@ void draw_textured_ring(
         glEnd();
     }
 
-    glDisable(GL_TEXTURE_2D); // Отключите текстурирование
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+}
+
+void draw_cube(
+        float x,
+        float y,
+        float z,
+        float width,
+        float height,
+        float depth
+    ) {
+    glPushMatrix();
+    glTranslatef(x, y, z);
+
+    glBegin(GL_QUADS);
+
+    // Front face
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(0, 0, 0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(width, 0, 0);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(width, height, 0);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(0, height, 0);
+
+    // Back face
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(0, 0, -depth);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(width, 0, -depth);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(width, height, -depth);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(0, height, -depth);
+
+    // Top face
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(0, height, 0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(width, height, 0);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(width, height, -depth);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(0, height, -depth);
+
+    // Bottom face
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(0, 0, 0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(width, 0, 0);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(width, 0, -depth);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(0, 0, -depth);
+
+    // Right face
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(width, 0, 0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(width, height, 0);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(width, height, -depth);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(width, 0, -depth);
+
+    // Left face
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(0, 0, 0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(0, height, 0);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(0, height, -depth);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(0, 0, -depth);
+
+    glEnd();
     glPopMatrix();
 }
 
@@ -104,7 +156,12 @@ int main() {
     const Window window("Lab 4", 800, 600);
     Window::setup_lighting();
 
-    static GLuint texture = load_texture("src/lab4/texture.jpg");
+    static GLuint texture_yellow = load_texture("src/lab4/texture.jpg");
+    static GLuint texture_black = load_texture("src/lab4/texture_black.jpeg");
+    static GLuint texture_blue = load_texture("src/lab4/texture_blue.jpg");
+    static GLuint texture_green = load_texture("src/lab4/texture_green.jpg");
+    static GLuint texture_red = load_texture("src/lab4/texture_red.jpeg");
+
 
     static float rings[5][3] = {
         // x, y, z
@@ -115,12 +172,22 @@ int main() {
         {-30, -20, 0}
     };
 
+    static GLuint textures[5] = {
+        texture_blue,
+        texture_yellow,
+        texture_black,
+        texture_green,
+        texture_red
+    };
+
     static float target_x[5] = {-30.0f, 0.0f, 30.0f, -15.0f, 15.0f};
     static bool state[5] = {false, false, false, false, false};
     static float speed = 0.5f;
     static int step = 0;
 
     window.loop([](GLFWwindow*) {
+        draw_cube(-50, -50, 10, 10, 10, 10);
+
         for (int i = 0; i < 5; i++) {
             if (!state[i]) {
                 state[i] = true;
@@ -134,7 +201,7 @@ int main() {
                 }
             }
 
-            draw_textured_ring(rings[i][0], rings[i][1], rings[i][2], 10, 3, 4, texture);
+            draw_textured_ring(rings[i][0], rings[i][1], rings[i][2], 10, 3, 4, textures[i]);
         }
 
         if (step < 5 && !state[step]) {
